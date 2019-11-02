@@ -19,8 +19,11 @@ type Stream struct {
 
 func main() {
 
-	// Config file
+	// Flags
 	configFile := flag.String("c", "rts2p.yaml", "config file")
+	flag.Parse()
+
+	// Config
 	config.SetConfigFile(*configFile)
 	err := config.ReadInConfig()
 	if err != nil {
