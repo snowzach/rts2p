@@ -58,9 +58,11 @@ func main() {
 			streamOptions = append(streamOptions, livemedia.Credentials(stream.Username, stream.Password))
 		}
 		r.AddProxyStream(stream.Url, stream.Name, streamOptions...)
+		log.Printf("Added stream '/%s' from %s\n", stream.Name, stream.Url)
 
 	}
 
+	// This will block
 	r.Run()
 
 }
