@@ -26,6 +26,7 @@ streams:
 ```
 
 This would create the feed `rtsp://server:5554/mytestfeed` and require a login of `myusername` with password `mypassword`
+Omit the username and password fields if you do not want to require a login.
 
 ## Docker
 
