@@ -2,8 +2,13 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"log"
+	"net/http"
+	"strings"
 
+	"github.com/go-chi/chi"
+	"github.com/go-chi/chi/middleware"
 	config "github.com/spf13/viper"
 
 	"github.com/snowzach/rts2p/livemedia"
@@ -15,6 +20,7 @@ type Stream struct {
 	Username  string `json:"username" yaml:"username"`
 	Password  string `json:"password" yaml:"password"`
 	Verbosity int    `json:"verbosity" yaml:"verbosity"`
+	Still     string `json:"still" yaml:"still"`
 }
 
 func main() {
@@ -39,11 +45,25 @@ func main() {
 		serverOptions = append(serverOptions, livemedia.Login(username, config.GetString("server.password")))
 	}
 
+	// Listen rtsp
 	r, err := livemedia.NewRTSPServer(serverOptions...)
 	if err != nil {
 		log.Fatalf("error starting server: %+v\n", err)
 	}
 	log.Printf("Server listening on :%d\n", config.GetInt("server.port"))
+
+	// Listen http
+	var router chi.Router
+	if httpPort := config.GetString("server.http_port"); httpPort != "" {
+		router = chi.NewRouter()
+		go func() { log.Fatalf("could not listen: %v", http.ListenAndServe(":"+httpPort, router)) }()
+		log.Printf("HTTP server listening on :%s\n", httpPort)
+
+		// Set basic auth if required
+		if username := config.GetString("server.username"); username != "" {
+			router.Use(middleware.BasicAuth("RTS2P", map[string]string{username: config.GetString("server.password")}))
+		}
+	}
 
 	var streams []Stream
 	err = config.UnmarshalKey("streams", &streams)
@@ -63,6 +83,22 @@ func main() {
 		r.AddProxyStream(stream.Url, stream.Name, streamOptions...)
 		log.Printf("Added stream '/%s' from %s\n", stream.Name, stream.Url)
 
+		// Setup stream handling URLS
+		if stream.Still != StillFalse && router != nil {
+			if strings.HasPrefix(stream.Still, "http") {
+				router.Get("/"+stream.Name, ServeStillUrl(stream.Still))
+				log.Printf("Added still proxy: '/%s' from %s\n", stream.Name, stream.Still)
+			} else {
+				var streamURL string
+				if username := config.GetString("server.username"); username != "" {
+					streamURL = fmt.Sprintf("rtsp://%s:%s@127.0.0.1:%d/%s", username, config.GetString("server.password"), config.GetInt("server.port"), stream.Name)
+				} else {
+					streamURL = fmt.Sprintf("rtsp://127.0.0.1:%d/%s", config.GetInt("server.port"), stream.Name)
+				}
+				router.Get("/"+stream.Name, ServeStillStream(streamURL, stream.Still))
+				log.Printf("Added still scraper: '/%s' from %s\n", stream.Name, streamURL)
+			}
+		}
 	}
 
 	// This will block

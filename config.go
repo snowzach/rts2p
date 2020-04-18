@@ -14,6 +14,7 @@ func init() {
 
 	// Logger Defaults
 	config.SetDefault("server.port", 5554)
+	config.SetDefault("server.http_port", "")
 	config.SetDefault("server.username", "")
 	config.SetDefault("server.password", "")
 	config.SetDefault("server.max_out_packet_size", 2000000)
