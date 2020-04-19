@@ -40,11 +40,14 @@ WORKDIR /build
 ADD . .
 RUN go build
 
+# 64 bit platforms put it in lib64 which won't work
+RUN [ -d /tmp/base/lib64 ] && mv /tmp/base/lib64 /tmp/base/lib || true
+
 FROM alpine:3.10
 RUN apk add --no-cache live-media libstdc++ ffmpeg-libs gstreamer gst-plugins-base gst-plugins-good gst-libav && \
     rm -rf /var/cache/apk/*
 WORKDIR /opt/rts2p
-COPY --from=builder /tmp/base/lib64/* /usr/lib/
+COPY --from=builder /tmp/base/ /usr/
 COPY --from=builder /build/rts2p /opt/rts2p/rts2p
 COPY example.yaml /opt/rts2p/rts2p.yaml
 CMD [ "/opt/rts2p/rts2p", "-c", "/opt/rts2p/rts2p.yaml" ]

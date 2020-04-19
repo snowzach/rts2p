@@ -38,7 +38,6 @@ You can proxy a still image url by putting an http url into the still parameter.
 
 You can also capture from the proxied RTSP stream and serve frames from the video using a couple options
  * stream - This will start a streaming client and serve frames
- * stream_rpi - This will do the same as stream but attempt to offload decoding to the Raspberry Pi GPU
  * once - This will create a client and capture a single frame and shutdown the client
  * false - do not serve frames for this stream
 

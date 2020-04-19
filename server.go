@@ -17,6 +17,7 @@ const (
 	StillStream    = "stream"
 	StillStreamRPI = "stream_rpi"
 	StillFalse     = "false"
+	StillDefault   = ""
 )
 
 // ServeStillUrl returns a proxied frame from a still url
@@ -62,7 +63,7 @@ func ServeStillStream(rtspURL string, method string) http.HandlerFunc {
 					capture, err = gocv.OpenVideoCapture(fmt.Sprintf("%s", rtspURL)) // gstreamer doesn't like to be opened and closed
 				} else if method == StillStreamRPI {
 					capture, err = gocv.OpenVideoCapture(fmt.Sprintf("rtspsrc location=%s ! rtph264depay ! h264parse ! omxh264dec ! appsink max-buffers=1 drop=true", rtspURL))
-				} else if method == StillStream {
+				} else if method == StillStream || method == StillDefault {
 					capture, err = gocv.OpenVideoCapture(fmt.Sprintf("rtspsrc location=%s ! decodebin ! videoconvert ! appsink max-buffers=1 drop=true", rtspURL))
 					// capture, err = gocv.OpenVideoCapture(fmt.Sprintf("rtspsrc location=%s latency=10 ! rtph264depay ! h264parse ! avdec_h264 ! videoconvert ! appsink max-buffers=1 drop=true", rtspURL))
 					// capture, err = gocv.OpenVideoCapture(fmt.Sprintf("rtspsrc location=%s ! rtph264depay ! h264parse ! avdec_h264 ! videoconvert ! appsink max-buffers=1 drop=true", rtspURL))
