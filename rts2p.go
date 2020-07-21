@@ -1,6 +1,7 @@
 package main
 
 import (
+	"crypto/tls"
 	"flag"
 	"fmt"
 	"log"
@@ -24,6 +25,9 @@ type Stream struct {
 }
 
 func main() {
+
+	// Disable TLS Validation on the default http client
+	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
 
 	// Flags
 	configFile := flag.String("c", "rts2p.yaml", "config file")
